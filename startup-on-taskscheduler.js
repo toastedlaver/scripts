@@ -9,7 +9,7 @@
 // 優先度 normal で起動するよう処理を変更
 
 // 下記パスのディレクトリに置いたファイル (or ショートカット) を実行していきます
-var dir_startup = 'C:\\Users\\ozawa\\AppData\\Local\\_mytool\\startup';
+var dir_startup = wsh.ExpandEnvironmentStrings('%LOCALAPPDATA%') + '\\_mytool\\startup';
 
 // 以下、本処理
 var fsys = new ActiveXObject('Scripting.FileSystemObject');
@@ -26,7 +26,7 @@ if (dir.Files.Count == 0)
 	WScript.Quit();
 }
 
-var wsh = new ActiveXObject("WScript.Shell");
+var wsh = new ActiveXObject('WScript.Shell');
 for (var enu_files = new Enumerator(dir.Files); !enu_files.atEnd(); enu_files.moveNext())
 {
 	var file = enu_files.item();
