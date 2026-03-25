@@ -9,6 +9,7 @@
 // 優先度 normal で起動するよう処理を変更
 
 // 下記パスのディレクトリに置いたファイル (or ショートカット) を実行していきます
+var wsh = new ActiveXObject('WScript.Shell');
 var dir_startup = wsh.ExpandEnvironmentStrings('%LOCALAPPDATA%') + '\\_mytool\\startup';
 
 // 以下、本処理
@@ -26,7 +27,6 @@ if (dir.Files.Count == 0)
 	WScript.Quit();
 }
 
-var wsh = new ActiveXObject('WScript.Shell');
 for (var enu_files = new Enumerator(dir.Files); !enu_files.atEnd(); enu_files.moveNext())
 {
 	var file = enu_files.item();
