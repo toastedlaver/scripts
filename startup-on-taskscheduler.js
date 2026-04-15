@@ -8,8 +8,9 @@
 // タスクスケジューラで起動すると、優先度クラスが normal ではく、それより低い belownormal で起動するため
 // 優先度 normal で起動するよう処理を変更
 
-// 下記パスのディレクトリに置いたファイル (or ショートカット) を実行していきます
 var wsh = new ActiveXObject('WScript.Shell');
+
+// 下記パスのディレクトリに置いたファイル (or ショートカット) を実行していきます
 var dir_startup = wsh.ExpandEnvironmentStrings('%LOCALAPPDATA%') + '\\_mytool\\startup';
 
 // 以下、本処理
