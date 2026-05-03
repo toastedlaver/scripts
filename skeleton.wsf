@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 自作スクリプト雛形 -->
+<package>
+  <job id='main'>
+	<script language="JavaScript" src="lib-relaunch.js"></script>
+	<script language="JavaScript" src="lib-arguments.js"></script>
+	<script language="JavaScript" src="lib-textstream.js"></script>
+	<script language="JavaScript">
+	  <![CDATA[
+			   OzReLaunch();
+			   WScript.Echo('Hellow!!');
+			   var args = new OzArguments(WScript.Arguments);
+			   var filepath = args.GetValue(0, 'テキストファイルを指定して下さい');
+			   var charset = args.GetValue(2, '文字コードを指定して下さい');
+			   var separator = args.GetValue(3, '改行コードを指定して下さい');
+			   var mode = args.GetValue(1, 'Read/Write を選択して下さい');
+
+			   WScript.Echo('File: ' + filepath);
+			   WScript.Echo('Mode: ' + mode);
+			   WScript.Echo('Charset: ' + charset);
+			   WScript.Echo('Separator: ' + separator);
+
+			   if (mode.toLowerCase() == 'write')
+			   {
+			     var wtxt = new OzTextStream(filepath, charset);
+			     wtxt.Write('UTF-8 書き込み。');
+			     wtxt.Write('優底衛府');
+			     wtxt.Close();
+			   }
+			   else
+			   {
+				 var rtxt = new OzTextStream(filepath, charset, separator);
+				 var line;
+				 var num = 0;
+				 while (line = rtxt.Read())
+				 {
+				   num++;
+				   WScript.Echo(num + ':' + line);
+				 }
+				 rtxt.Close();
+			   }
+	  ]]>
+	</script>
+  </job>
+</package>
