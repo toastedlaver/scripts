@@ -1,0 +1,382 @@
+<head>
+  <meta content="text/html;charset=utf-8" />
+  <title>露出計算ツール</title>
+  <script> MathJax = { chtml: { displayAlign: "left", }};</script> <!-- MathJaxによる計算式を左寄せ -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>基本式</h1>
+  <ul>
+	<li>露出:
+	  \[
+	  Ev = Av + Tv - Sv
+	  \]
+	</li>
+	<li>Av ⇔ 絞りF:
+	  \[
+	  Av = 2\log_2 F ⇔ F = 2^{ \frac{Av}{2}} = \sqrt{2^{Av}}
+	  \]
+	</li>
+	<li>Tv ⇔ シャッター速度T:
+	  \[
+	  Tv = log_2 T ⇔ T = 2^{-Tv} = \frac{1}{2^{Tv}}
+	  \]
+	</li>
+	<li>Sv ⇔ ISO感度S:
+	  \[
+	  Sv = log_2\frac{30}{100}S ≒ log_2\frac{S}{100}+5 ⇔ 100 \times 2^{Sv-5}
+	  \]
+	</li>
+  </ul>
+  <h1>Av ⇔ F, Tv ⇔ T, Sv ⇔ S</h1>
+  <form id="selectAccuracy">
+	<label><input type="radio" name="accuracy" value="1" checked="checked" id="accuracy1">ノーマル精度</label>
+	<label><input type="radio" name="accuracy" value="256" id="accuracy2">256精度</label>
+	<label><input type="radio" name="accuracy" value="1024" id="accuracy3">1024精度</label>
+  </form>
+  <table id="calculator" border="1" frame="box" rules="all">
+	<tr>
+	  <td>
+		<label>Av: <input type="number" id="numAv" placeholder="input like '1.2'"></label>
+		<input type="button" id="btnCalcF" value="F計算">
+		→
+		<label>F: <input type="text" id="txtF" size="10" readonly="readonly"></label>
+	  </td>
+	  <td>
+		<label>F: <input type="number" id="inF" placeholder="input like '1.2'"></label>
+		<input type="button" id="btnCalcAv" value="Av計算">
+		→
+		<label>Av: <input type="text" id="outAv" size="10" readonly="readonly"></label>
+	  </td>
+	</tr>
+	<tr>
+	  <td>
+		<label>Tv: <input type="number" id="numTv" placeholder="input like '1.2'"></label>
+		<input type="button" id="btnCalcT" value="T計算">
+		→
+		<label>T: <input type="text" id="txtT" size="10" readonly="readonly"></label>
+	  </td>
+	  <td>
+		<label>T: <input type="text" id="inT" placeholder="input like '1/200' or '3.4'"></label>
+		<input type="button" id="btnCalcTv" value="Tv計算">
+		→
+		<label>Tv: <input type="text" id="outTv" size="10" readonly="readonly"></label>
+	  </td>
+	</tr>
+	<tr>
+	  <td>
+		<label>Sv: <input type="number" id="numSv" placeholder="input like '1.2'"></label>
+		<input type="button" id="btnCalcIso" value="ISO計算">
+		→
+		<label>ISO: <input type="text" id="txtIso" size="10" readonly="readonly"></label>
+	  </td>
+	  <td>
+		<label>ISO: <input type="number" id="inIso" placeholder="input like '200'"></label>
+		<input type="button" id="btnCalcSv" value="Sv計算">
+		→
+		<label>Sv: <input type="text" id="outSv" size="10" readonly="readonly"></label>
+	  </td>
+	</tr>
+
+	<tr>
+	  <td>
+		<label>F: <input type="number" id="inF1" placeholder="input like '1.2'">
+		  - F: <input type="number" id="inF2" placeholder="input like '1.2'"></label>
+		<input type="button" id="btnCalcAvDiff" value="Av計算">
+		→
+		<label>Av <input type="text" id="outAvDiff" size="10" readonly="readonly"></label>
+	  </td>
+	</tr>
+	<tr>
+	  <td>
+		<label>T: <input type="number" id="inT1" placeholder="input like '1/200' or '3.4'">
+		  - T: <input type="number" id="inT2" placeholder="input like '1/200' or '3.4'"></label>
+		<input type="button" id="btnCalcTvDiff" value="Tv計算">
+		→
+		<label>Tv: <input type="text" id="outTvDiff" size="10" readonly="readonly"></label>
+	  </td>
+	</tr>
+	<tr>
+	  <td>
+		<label>ISO: <input type="number" id="inIso1" placeholder="input like '200'">
+		  - ISO: <input type="number" id="inIso2" placeholder="input like '200'"></label>
+		<input type="button" id="btnCalcSvDiff" value="Sv算">
+		→
+		<label>Sv <input type="text" id="outSvDiff" size="10" readonly="readonly"></label>
+	  </td>
+	</tr>
+  </table>
+  <h1>Chart</h1>
+  <form id="selectDiv">
+	<label><input type="radio" name="chartDiv" value="3" checked="checked" id="accuracy1">1/3段刻み</label>
+	<label><input type="radio" name="chartDiv" value="2" id="accuracy2">1/2段刻み</label>
+	<label><input type="radio" name="chartDiv" value="1" id="accuracy3">1段刻み</label>
+  </form>
+  <table id="chart" border="1" frame="box" rules="all">
+  </table>
+</body>
+<script>
+  var changeAccuracyEvent = new Array();
+  var accuracy_old;
+  window.onload = () => {
+	  //alert('hellow!!');
+	  registerFuncs('btnCalcF', 'numAv', dispF, true);
+	  registerFuncs('btnCalcAv', 'inF', dispAv, false);
+	  registerFuncs('btnCalcT', 'numTv', dispT, true);
+	  registerFuncs('btnCalcTv', 'inT', dispTv, false);
+	  registerFuncs('btnCalcIso', 'numSv', dispIso, true);
+	  registerFuncs('btnCalcSv', 'inIso', dispSv, false);
+	  registerFuncs2in('btnCalcAvDiff', 'inF1', 'inF2', dispAvDiff, false);
+	  registerFuncs2in('btnCalcTvDiff', 'inT1', 'inT2', dispTvDiff, false);
+	  registerFuncs2in('btnCalcSvDiff', 'inIso1', 'inIso2', dispSvDiff, false);
+
+	  // ラジオボタン切替時のイベント登録: それぞれのボタンに登録する必要がある
+	  let selectAccuracy = document.getElementById('selectAccuracy');
+	  for (let ii = 0; ii < selectAccuracy.elements.length; ii++)
+	  {
+		  selectAccuracy.elements[ii].addEventListener('change', changeAccuracy);
+	  }
+	  let selectDiv = document.getElementById('selectDiv');
+	  for (let ii = 0; ii < selectDiv.elements.length; ii++)
+	  {
+		  selectDiv.elements[ii].addEventListener('change', refreshChart);
+	  }
+
+	  accuracy_old = getAccuracy();
+	  refreshChart();
+  };
+
+  function registerFuncs(button_id, input_field_id, func, is_recal_input)
+  {
+	  let button = document.getElementById(button_id);
+	  let input = document.getElementById(input_field_id);
+	  button.onclick = () => {
+		  func(input.value);
+	  };
+	  input.onkeydown = function(e) { // アロー関数は this の扱いが異なるので使用不可
+		  if (e.key == 'Enter')
+		  {
+			  func(this.value);
+		  }
+	  };
+	  changeAccuracyEvent[button_id] = (accuracy_old, accuracy_new) => {
+		  if (input.value != '')
+		  {
+			  if (is_recal_input) // 精度切替時に input 値も切り替える
+			  {
+				  input.value *= accuracy_new / accuracy_old;
+			  }
+			  func(input1.value, input2.value);
+		  }
+	  };
+  }
+  function registerFuncs2in(button_id, input_field_id1, input_field_id2, func, is_recal_input)
+  {
+	  let button = document.getElementById(button_id);
+	  let input1 = document.getElementById(input_field_id1);
+	  let input2 = document.getElementById(input_field_id2);
+	  button.onclick = () => {
+		  func(input1.value, input2.value);
+	  };
+	  input1.onkeydown = function(e) { // アロー関数は this の扱いが異なるので使用不可
+		  if (e.key == 'Enter')
+		  {
+			  func(this.value, input2.value);
+		  }
+	  };
+	  input2.onkeydown = function(e) {
+		  if (e.key == 'Enter')
+		  {
+			  func(this.value, input2.value);
+		  }
+	  };
+	  changeAccuracyEvent[button_id] = (accuracy_old, accuracy_new) => {
+		  if ((input1.value != '') && (input2.value != ''))
+		  {
+			  // 今のところ recal を使う用途はないので実装は省略w
+			  func(input1.value, input2.value);
+		  }
+	  };
+  }
+
+  function dispF(av)
+  {
+	  let f = document.getElementById('txtF');
+	  f.value = getF(av);
+  }
+
+  function dispAv(f)
+  {
+	  let av = document.getElementById('outAv');
+	  av.value = getAv(f);
+  }
+
+  function dispT(tv)
+  {
+	  let tr = document.getElementById('txtT');
+	  tr.value = getT(tv);
+  }
+
+  function dispTv(t)
+  {
+	  let tv = document.getElementById('outTv');
+	  tv.value = getTv(t);
+  }
+
+  function dispIso(sv)
+  {
+	  let iso = document.getElementById('txtIso');
+	  iso.value = getIso(sv);
+  }
+
+  function dispSv(iso)
+  {
+	  let sv = document.getElementById('outSv');
+	  sv.value = getSv(iso);
+  }
+
+  function dispAvDiff(f1, f2)
+  {
+	  let av = document.getElementById('outAvDiff');
+	  av.value = getAv(f1) - getAv(f2);
+  }
+
+  function dispTvDiff(t1, t2)
+  {
+	  let tv = document.getElementById('outTvDiff');
+	  tv.value = getTv(f1) - getTv(f2);
+  }
+
+  function dispSvDiff(iso1, iso2)
+  {
+	  let sv = document.getElementById('outSvDiff');
+	  sv.value = getSv(iso1) - getSv(iso2);
+  }
+
+  function getF(av)
+  {
+	  av = av / getAccuracy();
+	  return 2 ** (0.5 * av); // (2 ** 0.5) ** av だと誤差が出るので…
+  }
+
+  function getAv(f)
+  {
+	  // log 関数の底は e で固定なので EXCEL 関数で言う「LOG(f, 2^0.5) = LOG(f, e) / LOG(2^0.5, e)」の変換をしている
+	  let v = Math.log(f) / Math.log(2 ** 0.5); // 丸め誤差が出るので
+	  const dig = 10 ** 15;						// とりあえず四捨五入しておく
+	  v = Math.round(v * dig) / dig;			// 桁指定できないので…
+	  return v * getAccuracy();
+  }
+
+  function getT(tv)
+  {
+	  tv = tv / getAccuracy();
+	  if (tv <= 0)
+	  {
+		  return 1 / calcTReciprocal(tv);
+	  }
+	  return '1/' + calcTReciprocal(tv);
+  }
+
+  function getTv(t)
+  {
+	  t = t.replaceAll(/[ \t]/g, ''); // 空白を取る
+	  let square = 1;
+	  let m = null;
+	  if (m = t.match(/^1\/(.+$)/)) // 分数表記 (1 以下) ※符号は認めない (SS にマイナスはない)
+	  {
+		  t = m[1];
+		  square = -1; // 逆数なのでマイナス
+	  }
+	  if ((m = t.match(/^([0-9]+\.{0,1}[0-9]+)/)) || (m = t.match(/^([0-9]+)/)))
+	  {
+		  return calcTv(m[1] ** square) * getAccuracy();
+	  }
+	  return '構文エラー';
+  }
+
+  function calcTReciprocal(tv) //  tv は逆数、精度の補正は外でやる
+  {
+	  return 2 ** tv;
+  }
+
+  function calcTv(t)
+  {
+	  return Math.log2(1/t); // 精度の補正は外でやる
+  }
+
+  function getIso(sv)
+  {
+	  sv = sv / getAccuracy();
+	  return 100 * 2 ** (sv - 5);
+  }
+
+  function getSv(iso)
+  {
+	  return (Math.log2(iso/100) + 5) * getAccuracy();
+  }
+
+  function getAccuracy()
+  {
+	  let selectAccuracy = document.getElementById('selectAccuracy');
+	  console.log(selectAccuracy.elements['accuracy'].value);
+	  return selectAccuracy.elements['accuracy'].value;
+  }
+
+  function changeAccuracy()
+  {
+	  let accuracy_new = getAccuracy();
+	  for (key in changeAccuracyEvent)
+	  {
+		  changeAccuracyEvent[key](accuracy_old, accuracy_new);
+	  }
+	  accuracy_old = accuracy_new;
+	  refreshChart();
+  }
+
+  function refreshChart()
+  {
+	  let chart = document.getElementById('chart');
+	  // 今あるやつを消す
+	  while (chart.rows.length)
+	  {
+		  chart.deleteRow(0);
+	  }
+
+	  // ヘッダ作成
+	  let row = chart.insertRow(-1); // 末尾に追加
+	  const header_texts = ['Step', 'Value', 'F', 'T', 'ISO'];
+	  for (let ii = 0; ii < header_texts.length; ii++)
+	  {
+		  let th = document.createElement('th');
+		  th.appendChild(document.createTextNode(header_texts[ii]));
+		  row.appendChild(th);
+	  }
+
+	  // 本体
+	  const div = getChartDiv(); // Step 分割数 (1 段を何分割するか。 i.e. 3 なら 1/3 段ずつ増加)
+	  for (let num = 0; num <= 20 * div; num++) // 0 〜 20 段まで出す
+	  {
+		  //let step = Math.floor(num / div) + (num % div); // step += 1/div だと誤差が出るので…
+		  let step = num / div;
+		  let row = chart.insertRow(-1);
+		  let cell = row.insertCell(-1);
+		  cell.appendChild(document.createTextNode(step));
+		  cell = row.insertCell(-1);
+		  let value = step * getAccuracy(); // 精度補正
+		  cell.appendChild(document.createTextNode(value));
+		  cell = row.insertCell(-1);
+		  cell.appendChild(document.createTextNode(getF(value)));
+		  cell = row.insertCell(-1);
+		  cell.appendChild(document.createTextNode(getT(value)));
+		  cell = row.insertCell(-1);
+		  cell.appendChild(document.createTextNode(getIso(value)));
+	  }
+  }
+
+  function getChartDiv()
+  {
+	  let selectDiv = document.getElementById('selectDiv');
+	  return selectDiv.elements['chartDiv'].value;
+  }
+</script>
