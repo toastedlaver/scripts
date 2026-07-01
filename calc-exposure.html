@@ -261,10 +261,7 @@
 
   function getAv(f)
   {
-	  // log 関数の底は e で固定なので EXCEL 関数で言う「LOG(f, 2^0.5) = LOG(f, e) / LOG(2^0.5, e)」の変換をしている
-	  let v = Math.log(f) / Math.log(2 ** 0.5); // 丸め誤差が出るので
-	  const dig = 10 ** 15;						// とりあえず四捨五入しておく
-	  v = Math.round(v * dig) / dig;			// 桁指定できないので…
+	  let v = OzMath.log(2 ** 0.5, f);
 	  return v * getAccuracy();
   }
 
@@ -302,7 +299,7 @@
 
   function calcTv(t)
   {
-	  return Math.log2(1/t); // 精度の補正は外でやる
+	  return OzMath.log(2, 1/t); // 精度の補正は外でやる
   }
 
   function getIso(sv)
@@ -313,13 +310,12 @@
 
   function getSv(iso)
   {
-	  return (Math.log2(iso/100) + 5) * getAccuracy();
+	  return (OzMath.log(2, iso/100) + 5) * getAccuracy();
   }
 
   function getAccuracy()
   {
 	  let selectAccuracy = document.getElementById('selectAccuracy');
-	  console.log(selectAccuracy.elements['accuracy'].value);
 	  return selectAccuracy.elements['accuracy'].value;
   }
 
@@ -355,16 +351,15 @@
 
 	  // 本体
 	  const div = getChartDiv(); // Step 分割数 (1 段を何分割するか。 i.e. 3 なら 1/3 段ずつ増加)
-	  for (let num = 0; num <= 20 * div; num++) // 0 〜 20 段まで出す
+	  for (let num = 0; num <= 20 * div; num++) // 0 〜 20 段まで出す。 num += 1/div だと誤差が出るので後で割る
 	  {
-		  //let step = Math.floor(num / div) + (num % div); // step += 1/div だと誤差が出るので…
 		  let step = num / div;
 		  let row = chart.insertRow(-1);
 		  let cell = row.insertCell(-1);
-		  cell.appendChild(document.createTextNode(step));
+		  cell.appendChild(document.createTextNode(OzMath.round(step, 2)));
 		  cell = row.insertCell(-1);
 		  let value = step * getAccuracy(); // 精度補正
-		  cell.appendChild(document.createTextNode(value));
+		  cell.appendChild(document.createTextNode(OzMath.round(value, 2)));
 		  cell = row.insertCell(-1);
 		  cell.appendChild(document.createTextNode(getF(value)));
 		  cell = row.insertCell(-1);
@@ -378,5 +373,47 @@
   {
 	  let selectDiv = document.getElementById('selectDiv');
 	  return selectDiv.elements['chartDiv'].value;
+  }
+
+  class OzMath
+  {
+	  // Math.round 関数は桁指定できないので桁指定できる関数を作成
+	  static round(number, num_digits)
+	  {
+		  // num_digits が正なら小数点以下の桁、負なら整数部分で四捨五入 ★EXCEL の ROUND と同じ仕様です
+		  // round(123.456, 2) → 123.46
+		  // round(123.456, 0) → 123
+		  // round(123.456, -1) → 120
+		  //const digits = 10 ** num_digits;
+		  const digits = 10 ** num_digits;
+		  return Math.round(number * digits) / digits;
+	  }
+
+	  // Math.ceil (切り上げ) / Math.floor (切り捨て) は…また別の機会にw
+
+	  // Math.log 関数は底 e で固定なので底を指定できる関数を作成
+	  static log(base, antilogarithm)
+	  {
+		  if (base == 2)
+		  {
+			  return Math.log2(antilogarithm);
+		  }
+		  else if (base == 10)
+		  {
+			  return Math.log10(antilogarithm);
+		  }
+		  else if (base != Math.exp())
+		  {
+			  // a, b ≠ 1 のとき
+			  // {log 底:a, 数値:b} = {log 底:e, 数値:b} / {log 底:e, 値:a}
+
+			  // 丸め誤差が出るので四捨五入しておく
+			  return this.round(Math.log(antilogarithm) / Math.log(base), 14); // ウチの環境では 15 桁までしか出ない
+		  }
+		  else
+		  {
+			  return Math.log(antilogarithm)
+		  }
+	  }
   }
 </script>
