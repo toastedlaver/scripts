@@ -2,7 +2,7 @@
 @rem 日々バックアップ処理
 setlocal
 
-set BKUP_DIR="%OneDrive%"\ozawa\backup
+set BKUP_DIR="%OneDrive%"\private\backup
 
 @rem SKK 辞書バックアップ
 set SKK_BKUP_DIR=%BKUP_DIR%\skk
